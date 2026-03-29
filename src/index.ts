@@ -1,5 +1,5 @@
 import dotenv from 'dotenv';
-dotenv.config();
+try { dotenv.config(); } catch { /* .env not found — env vars come from the host (e.g. Render dashboard) */ }
 
 import express from 'express';
 import cors from 'cors';
