@@ -50,8 +50,6 @@ app.use(
 
 app.use(express.json());
 
-// ── Routes ────────────────────────────────────────────────────────────────────
-const PORT = process.env.PORT || 5000;
 
 app.use('/api/auth', authRoutes);
 app.use('/api/groups', groupRoutes);
@@ -65,20 +63,25 @@ app.get('/', (_req, res) => {
 // ── Start ─────────────────────────────────────────────────────────────────────
 console.log('✔ Step 4: app configured, starting server...');
 
+const PORT = process.env.PORT || 5000;
+
 const startServer = async () => {
-  try {
-    if (!process.env.MONGO_URI) {
-      console.warn('⚠️  MONGO_URI not set — skipping DB connection.');
-    } else {
+  // Always bind to port first so Render doesn't time out
+  app.listen(PORT, () => {
+    console.log(`🚀 Server running on port ${PORT} [${process.env.NODE_ENV ?? 'development'}]`);
+  });
+
+  // Then connect to MongoDB
+  if (!process.env.MONGO_URI) {
+    console.warn('⚠️  MONGO_URI not set — skipping DB connection.');
+  } else {
+    try {
       await mongoose.connect(process.env.MONGO_URI);
       console.log('✅ Connected to MongoDB');
+    } catch (error) {
+      console.error('❌ MongoDB connection failed (server still running):', error);
+      // Don't exit — server is still up for health checks
     }
-    app.listen(PORT, () => {
-      console.log(`🚀 Server running on port ${PORT} [${process.env.NODE_ENV ?? 'development'}]`);
-    });
-  } catch (error) {
-    console.error('❌ Failed to start the server:', error);
-    process.exit(1);
   }
 };
 
